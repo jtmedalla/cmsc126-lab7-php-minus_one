@@ -6,7 +6,7 @@ header("Content-Type: application/json; charset=utf-8");
 
 require_once __DIR__ . "/DBConnector.php";
 
-const MAX_IMAGE_SIZE = 2097152;
+const MAX_IMAGE_SIZE = 2097152; //2 MB
 
 function jsonResponse(int $statusCode, bool $success, string $message, array $data = []): void
 {
@@ -63,10 +63,17 @@ function validateStudentPayload(array $payload): array
     ];
 }
 
+// check if uploads directory exists. if not, create upload directory
 function ensureUploadDirectory(): string
 {
     $uploadDir = __DIR__ . "/uploads";
 
+    // ensure that a folder is writable
+    if (!is_writable("./")) {
+        throw new RuntimeException("No write permissions in the current directory");
+    }
+
+    // check, make direcotry, then check again
     if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true) && !is_dir($uploadDir)) {
         throw new RuntimeException("Unable to create upload directory.");
     }
