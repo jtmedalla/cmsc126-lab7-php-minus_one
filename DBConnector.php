@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// change details according to database login information
 $servername = "localhost";
 $username = "root";
 $password = "";
