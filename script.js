@@ -7,7 +7,11 @@ const imageInput = document.getElementById("stdImage");
 
 function showStatus(message, isError) {
   statusMessage.textContent = message;
-  statusMessage.style.color = isError ? "#b00020" : "#006400";
+    statusMessage.className = ""; 
+    
+    if (message) {
+        statusMessage.classList.add(isError ? "status-error" : "status-success");
+    }
 }
 
 function fillForm(student) {
@@ -21,12 +25,26 @@ function fillForm(student) {
   );
   document.getElementById("stdGraduating").checked =
     Number(student.graduating) === 1;
-  imageInput.required = false;
+  const preview = document.getElementById("imagePreview");
+    if (student.image_path) {
+        preview.src = student.image_path;
+        preview.style.display = "block"; 
+    } else {
+        preview.style.display = "none";
+    }
+
+    imageInput.required = false;
 }
 
 function clearFormForCreate() {
   studentIdInput.value = "";
   imageInput.required = true;
+
+  const preview = document.getElementById("imagePreview");
+  if (preview) {
+        preview.src = "";
+        preview.style.display = "none";
+    }
 }
 
 async function parseResponse(response) {
@@ -59,8 +77,9 @@ form.addEventListener("submit", async function (event) {
     });
     const payload = await parseResponse(response);
     const student = payload.data.student;
-    fillForm(student);
-    searchInput.value = student.id;
+    form.reset();
+    clearFormForCreate(); 
+    searchInput.value = "";
     showStatus(payload.message + " ID: " + student.id, false);
   } catch (error) {
     showStatus(error.message, true);
@@ -84,6 +103,8 @@ document
       fillForm(payload.data.student);
       showStatus(payload.message, false);
     } catch (error) {
+      form.reset();
+      clearFormForCreate();
       showStatus(error.message, true);
     }
   });
