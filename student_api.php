@@ -90,11 +90,10 @@ function storeImage(array $file): string
         "image/jpeg" => "jpg",
         "image/png" => "png",
         "image/webp" => "webp",
-        "image/gif" => "gif",
     ];
 
     if (!isset($allowed[$mime])) {
-        throw new InvalidArgumentException("Only JPG, PNG, WEBP, and GIF files are allowed.");
+        throw new InvalidArgumentException("Only JPG, PNG, and WEBP files are allowed.");
     }
 
     $uploadDir = ensureUploadDirectory();
