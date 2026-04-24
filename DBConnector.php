@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+// change details according to database login information
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -32,6 +33,7 @@ function createStudent(array $student): int
         throw new RuntimeException("Failed to prepare create statement.");
     }
 
+    // fill the question marks in located in the $sql string
     $stmt->bind_param(
         "sissiis",
         $student["name"],
@@ -43,6 +45,7 @@ function createStudent(array $student): int
         $student["image_path"]
     );
 
+    // run the sql statement here
     if (!$stmt->execute()) {
         $error = $stmt->error;
         $stmt->close();
@@ -50,6 +53,7 @@ function createStudent(array $student): int
         throw new RuntimeException("Failed to create student: " . $error);
     }
 
+    // get id of newly created entry then return
     $newId = (int) $stmt->insert_id;
     $stmt->close();
     $conn->close();
@@ -97,6 +101,7 @@ function updateStudentById(int $id, array $student): bool
         throw new RuntimeException("Failed to prepare update statement.");
     }
 
+    // fill the question marks in located in the $sql string
     $stmt->bind_param(
         "sissiisi",
         $student["name"],
@@ -116,6 +121,7 @@ function updateStudentById(int $id, array $student): bool
         throw new RuntimeException("Failed to update student: " . $error);
     }
 
+    // return true when a row is updated successfully
     $updated = $stmt->affected_rows >= 0;
     $stmt->close();
     $conn->close();
@@ -143,6 +149,7 @@ function deleteStudentById(int $id): bool
         throw new RuntimeException("Failed to delete student: " . $error);
     }
 
+    // return true when a row is deleted successfully
     $deleted = $stmt->affected_rows > 0;
     $stmt->close();
     $conn->close();

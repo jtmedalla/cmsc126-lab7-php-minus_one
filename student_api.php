@@ -6,7 +6,7 @@ header("Content-Type: application/json; charset=utf-8");
 
 require_once __DIR__ . "/DBConnector.php";
 
-const MAX_IMAGE_SIZE = 2097152;
+const MAX_IMAGE_SIZE = 2097152; //2 MB
 
 function jsonResponse(int $statusCode, bool $success, string $message, array $data = []): void
 {
@@ -63,10 +63,17 @@ function validateStudentPayload(array $payload): array
     ];
 }
 
+// check if uploads directory exists. if not, create upload directory
 function ensureUploadDirectory(): string
 {
     $uploadDir = __DIR__ . "/uploads";
 
+    // ensure that a folder is writable
+    if (!is_writable("./")) {
+        throw new RuntimeException("No write permissions in the current directory");
+    }
+
+    // check, make direcotry, then check again
     if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true) && !is_dir($uploadDir)) {
         throw new RuntimeException("Unable to create upload directory.");
     }
@@ -90,11 +97,10 @@ function storeImage(array $file): string
         "image/jpeg" => "jpg",
         "image/png" => "png",
         "image/webp" => "webp",
-        "image/gif" => "gif",
     ];
 
     if (!isset($allowed[$mime])) {
-        throw new InvalidArgumentException("Only JPG, PNG, WEBP, and GIF files are allowed.");
+        throw new InvalidArgumentException("Only JPG, PNG, and WEBP files are allowed.");
     }
 
     $uploadDir = ensureUploadDirectory();
@@ -123,6 +129,94 @@ function deleteImageIfExists(?string $relativePath): void
     }
 }
 
+function createAction(): void {
+    $student = validateStudentPayload($_POST);
+    if (!isset($_FILES["image"])) {
+        throw new InvalidArgumentException("Profile image is required.");
+    }
+
+    $imagePath = storeImage($_FILES["image"]);
+    $student["image_path"] = $imagePath;
+
+    try {
+        $id = createStudent($student);
+        $record = getStudentById($id);
+        jsonResponse(201, true, "Student created successfully.", ["student" => $record]);
+    } catch (Throwable $e) {
+        deleteImageIfExists($imagePath);
+        throw $e;
+    }
+}
+
+function searchAction(): void {
+    $id = (int) ($_GET["id"] ?? 0);
+    if ($id <= 0) {
+        throw new InvalidArgumentException("A valid student ID is required.");
+    }
+
+    $student = getStudentById($id);
+    if (!$student) {
+        jsonResponse(404, false, "Student not found.");
+    }
+
+    jsonResponse(200, true, "Student found.", ["student" => $student]);
+}
+
+function updateAction(): void {
+    $id = (int) ($_POST["id"] ?? 0);
+    if ($id <= 0) {
+        throw new InvalidArgumentException("A valid student ID is required.");
+    }
+
+    $existing = getStudentById($id);
+    if (!$existing) {
+        jsonResponse(404, false, "Student not found.");
+    }
+
+    $student = validateStudentPayload($_POST);
+    $newImagePath = null;
+    $student["image_path"] = (string) $existing["image_path"];
+
+    if (isset($_FILES["image"]) && ($_FILES["image"]["error"] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+        $newImagePath = storeImage($_FILES["image"]);
+        $student["image_path"] = $newImagePath;
+    }
+
+    try {
+        updateStudentById($id, $student);
+        if ($newImagePath !== null) {
+            deleteImageIfExists((string) $existing["image_path"]);
+        }
+        $record = getStudentById($id);
+        jsonResponse(200, true, "Student updated successfully.", ["student" => $record]);
+    } catch (Throwable $e) {
+        if ($newImagePath !== null) {
+            deleteImageIfExists($newImagePath);
+        }
+        throw $e;
+    }
+}
+
+function deleteAction(): void {
+    $id = (int) ($_POST["id"] ?? 0);
+    if ($id <= 0) {
+        throw new InvalidArgumentException("A valid student ID is required.");
+    }
+
+    $existing = getStudentById($id);
+    if (!$existing) {
+        jsonResponse(404, false, "Student not found.");
+    }
+
+    $deleted = deleteStudentById($id);
+    if (!$deleted) {
+        throw new RuntimeException("Delete operation did not remove any record.");
+    }
+
+    deleteImageIfExists((string) $existing["image_path"]);
+    jsonResponse(200, true, "Student deleted successfully.");
+}
+
 try {
     $action = $_REQUEST["action"] ?? "";
 
@@ -130,93 +224,13 @@ try {
         jsonResponse(400, false, "Missing action.");
     }
 
-    if ($action === "create") {
-        $student = validateStudentPayload($_POST);
-        if (!isset($_FILES["image"])) {
-            throw new InvalidArgumentException("Profile image is required.");
-        }
+    if ($action === "create") createAction();
 
-        $imagePath = storeImage($_FILES["image"]);
-        $student["image_path"] = $imagePath;
+    if ($action === "search") searchAction();
 
-        try {
-            $id = createStudent($student);
-            $record = getStudentById($id);
-            jsonResponse(201, true, "Student created successfully.", ["student" => $record]);
-        } catch (Throwable $e) {
-            deleteImageIfExists($imagePath);
-            throw $e;
-        }
-    }
+    if ($action === "update") updateAction();
 
-    if ($action === "search") {
-        $id = (int) ($_GET["id"] ?? 0);
-        if ($id <= 0) {
-            throw new InvalidArgumentException("A valid student ID is required.");
-        }
-
-        $student = getStudentById($id);
-        if (!$student) {
-            jsonResponse(404, false, "Student not found.");
-        }
-
-        jsonResponse(200, true, "Student found.", ["student" => $student]);
-    }
-
-    if ($action === "update") {
-        $id = (int) ($_POST["id"] ?? 0);
-        if ($id <= 0) {
-            throw new InvalidArgumentException("A valid student ID is required.");
-        }
-
-        $existing = getStudentById($id);
-        if (!$existing) {
-            jsonResponse(404, false, "Student not found.");
-        }
-
-        $student = validateStudentPayload($_POST);
-        $newImagePath = null;
-        $student["image_path"] = (string) $existing["image_path"];
-
-        if (isset($_FILES["image"]) && ($_FILES["image"]["error"] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
-            $newImagePath = storeImage($_FILES["image"]);
-            $student["image_path"] = $newImagePath;
-        }
-
-        try {
-            updateStudentById($id, $student);
-            if ($newImagePath !== null) {
-                deleteImageIfExists((string) $existing["image_path"]);
-            }
-            $record = getStudentById($id);
-            jsonResponse(200, true, "Student updated successfully.", ["student" => $record]);
-        } catch (Throwable $e) {
-            if ($newImagePath !== null) {
-                deleteImageIfExists($newImagePath);
-            }
-            throw $e;
-        }
-    }
-
-    if ($action === "delete") {
-        $id = (int) ($_POST["id"] ?? 0);
-        if ($id <= 0) {
-            throw new InvalidArgumentException("A valid student ID is required.");
-        }
-
-        $existing = getStudentById($id);
-        if (!$existing) {
-            jsonResponse(404, false, "Student not found.");
-        }
-
-        $deleted = deleteStudentById($id);
-        if (!$deleted) {
-            throw new RuntimeException("Delete operation did not remove any record.");
-        }
-
-        deleteImageIfExists((string) $existing["image_path"]);
-        jsonResponse(200, true, "Student deleted successfully.");
-    }
+    if ($action === "delete") deleteAction();
 
     jsonResponse(400, false, "Invalid action.");
 } catch (InvalidArgumentException $e) {
