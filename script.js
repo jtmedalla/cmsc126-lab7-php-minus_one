@@ -39,6 +39,7 @@ function fillForm(student) {
 function clearFormForCreate() {
   studentIdInput.value = "";
   imageInput.required = true;
+  enableSubmit();
 
   const preview = document.getElementById("imagePreview");
   if (preview) {
@@ -122,6 +123,7 @@ document
     } catch (error) {
       form.reset();
       clearFormForCreate();
+      enableSubmit();
       showStatus(error.message, true);
     }
   });
@@ -180,6 +182,7 @@ document
       form.reset();
       searchInput.value = "";
       clearFormForCreate();
+      enableSubmit();
       showStatus(payload.message, false);
     } catch (error) {
       showStatus(error.message, true);
