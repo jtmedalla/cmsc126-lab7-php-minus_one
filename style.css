@@ -157,15 +157,20 @@ button:hover, input:hover {
 }
 
 #statusMessage {
-    display: inline-block;
-    padding: 8px 20px;
-    border-radius: 50px;
-    font-weight: bold;
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1000;
+    display: none;
+    width: min(90vw, 420px);
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-weight: 700;
     font-size: 14px;
-    margin: 15px 0;
-    min-height: 20px;
-    transition: all 0.3s ease;
-    text-align: center;
+    line-height: 1.4;
+    text-align: left;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    animation: status-slide-in 0.2s ease-out;
 }
 
 .status-success {
@@ -182,4 +187,19 @@ button:hover, input:hover {
 
 #statusMessage:empty {
     display: none;
+}
+
+#statusMessage:not(:empty) {
+    display: block;
+}
+
+@keyframes status-slide-in {
+    from {
+        transform: translateY(12px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }

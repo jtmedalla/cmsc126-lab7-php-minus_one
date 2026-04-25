@@ -4,14 +4,27 @@ const statusMessage = document.getElementById("statusMessage");
 const studentIdInput = document.getElementById("studentId");
 const searchInput = document.getElementById("stdSearch");
 const imageInput = document.getElementById("stdImage");
+let statusTimer = null;
 
 function showStatus(message, isError) {
   statusMessage.textContent = message;
-    statusMessage.className = ""; 
-    
-    if (message) {
-        statusMessage.classList.add(isError ? "status-error" : "status-success");
-    }
+  statusMessage.className = "";
+
+  if (statusTimer) {
+    clearTimeout(statusTimer);
+    statusTimer = null;
+  }
+
+  if (message) {
+    statusMessage.classList.add("status-toast", isError ? "status-error" : "status-success");
+    statusMessage.setAttribute("role", isError ? "alert" : "status");
+
+    statusTimer = window.setTimeout(function () {
+      showStatus("", false);
+    }, 5000);
+  } else {
+    statusMessage.removeAttribute("role");
+  }
 }
 
 function fillForm(student) {
