@@ -86,22 +86,6 @@ form.addEventListener("submit", async function (event) {
   }
 });
 
-function disableSubmit() {
-  const btnSubmit = document.getElementById("btnSubmit");
-  btnSubmit.setAttribute("disabled", "");
-}
-
-function enableSubmit() {
-  const btnSubmit = document.getElementById("btnSubmit");
-  btnSubmit.removeAttribute("disabled");
-}
-
-document
-  .getElementById("btnReset")
-  .addEventListener("click", function () {
-    enableSubmit();
-  });
-
 document
   .getElementById("btnSearch")
   .addEventListener("click", async function () {
@@ -110,8 +94,6 @@ document
       showStatus("Enter a valid student ID first.", true);
       return;
     }
-
-    disableSubmit();
 
     try {
       const response = await fetch(
