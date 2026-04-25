@@ -144,6 +144,7 @@ button {
 
 input[type="submit"] { background-color: #d32f2f; color: white; }
 input[type="reset"] { background-color: #757575; color: white; margin-left: 10px; }
+input[disabled] { background-color: #757575; color: white;}
 
 #btnSearch { background-color: #1976d2; color: white; }
 #btnUpdate { background-color: #fbc02d; color: #333; }
