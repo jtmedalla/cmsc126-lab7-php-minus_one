@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS students (
 
 1. Place project under your PHP server root (for example XAMPP htdocs).
 2. Update DB credentials in `DBConnector.php` if needed.
-3. Open `index.php` in your browser.
+3. Open `index.html` in your browser.
 
 ## CRUD Flow
 
@@ -46,4 +46,4 @@ CREATE TABLE IF NOT EXISTS students (
 - Age: 0 to 99
 - Email: valid format, max 40 characters
 - Year level: 1 to 4
-- Image: required for create, optional for update, max 2MB, must be JPG/PNG/WEBP/GIF
+- Image: required for create, optional for update, max 2MB, must be JPG/PNG/WEBP
